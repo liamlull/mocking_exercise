@@ -48,6 +48,7 @@ public class SalesAppTest {
 		doReturn(sales).when(salesDao).getSalesBySalesId(anyString());
 		doReturn(false).when(salesApp).isEffectiveTime(any(Sales.class));
 		doReturn(salesActivityReport).when(salesApp).generateReport(anyListOf(String.class),  anyListOf(SalesReportData.class));
+		doReturn(Arrays.asList(new SalesReportData())).when(salesApp).filterReportData(anyInt(),anyBoolean(),anyListOf(SalesReportData.class),anyListOf(SalesReportData.class));
 
 		// when
 		salesApp.generateSalesActivityReport("DUMMY", 1000, true, false);
@@ -78,6 +79,7 @@ public class SalesAppTest {
 		doReturn(sales).when(salesDao).getSalesBySalesId(anyString());
 		doReturn(false).when(salesApp).isEffectiveTime(any(Sales.class));
 		doReturn(salesActivityReport).when(salesApp).generateReport(anyListOf(String.class),  anyListOf(SalesReportData.class));
+		doReturn(Arrays.asList(new SalesReportData())).when(salesApp).filterReportData(anyInt(),anyBoolean(),anyListOf(SalesReportData.class),anyListOf(SalesReportData.class));
 
 		// when
 		salesApp.generateSalesActivityReport("DUMMY", 1000, false, false);
@@ -88,6 +90,24 @@ public class SalesAppTest {
 		verify(ecmService).uploadDocument("xml content!!!");
 	}
 
+
+	@Test
+	public void test_filterReportData() {
+        //given   filterReportData(maxRow, isSupervisor, filteredReportDataList, reportDataList);
+		Sales sales = mock(Sales.class);
+		when(sales.getEffectiveFrom()).thenReturn(new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000));
+		when(sales.getEffectiveTo()).thenReturn(new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000));
+		when(sales.isSupervisor()).thenReturn(true);
+
+
+		//when
+		doReturn(Arrays.asList(new SalesReportData())).when(salesApp).filterReportData(anyInt(),anyBoolean(),anyListOf(SalesReportData.class),anyListOf(SalesReportData.class));
+
+		salesApp.filterReportData(1000,true,Arrays.asList(new SalesReportData()),Arrays.asList(new SalesReportData()));
+
+		//then
+		verify(salesApp,times(1)).filterReportData(anyInt(),anyBoolean(),anyListOf(SalesReportData.class),anyListOf(SalesReportData.class));
+	}
 
 	@Test
 	public void test_sales_dao_get_sale_by_sales_id_when_give_a_sales_id() {
@@ -108,23 +128,6 @@ public class SalesAppTest {
 	}
 
 	@Test
-	public void test_sales_app_should_return_true_when_is_effective_time() {
-
-		//given
-		Sales sales = mock(Sales.class);
-		when(sales.getEffectiveFrom()).thenReturn(new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000));
-		when(sales.getEffectiveTo()).thenReturn(new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000));
-		when(sales.isSupervisor()).thenReturn(true);
-
-        // when
-		boolean result = salesApp.isEffectiveTime(sales);
-
-		//then
-		assertTrue(salesApp.isEffectiveTime(sales));
-	}
-
-
-	@Test
 	public void test_sales_dao_get_report_data_by_sales_should_return_sales_activity() {
 
 		//given
@@ -143,6 +146,25 @@ public class SalesAppTest {
 		//then
 		assertEquals("SalesActivity",salesDao.getReportData(sales).get(0).getType());
 	}
+
+	@Test
+	public void test_sales_app_should_return_true_when_is_effective_time() {
+
+		//given
+		Sales sales = mock(Sales.class);
+		when(sales.getEffectiveFrom()).thenReturn(new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000));
+		when(sales.getEffectiveTo()).thenReturn(new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000));
+		when(sales.isSupervisor()).thenReturn(true);
+
+        // when
+		boolean result = salesApp.isEffectiveTime(sales);
+
+		//then
+		assertTrue(salesApp.isEffectiveTime(sales));
+	}
+
+
+
 
 	@Test
 	public void test_sales_app_should_return_true_when_is_not_effective_time() {

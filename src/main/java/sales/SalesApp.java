@@ -24,7 +24,9 @@ public class SalesApp {
 		Sales sales = salesDao.getSalesBySalesId(salesId);
 		if (isEffectiveTime(sales)) return;
 		List<SalesReportData> reportDataList = salesReportDao.getReportData(sales);
-		
+
+		filterReportData(maxRow, isSupervisor, filteredReportDataList, reportDataList);
+
 		if (isNatTrade) {
 			headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Time");
 		} else {
@@ -36,6 +38,27 @@ public class SalesApp {
 
 		ecmService.uploadDocument(report.toXml());
 		
+	}
+
+	public List<SalesReportData> filterReportData(int maxRow, boolean isSupervisor, List<SalesReportData> filteredReportDataList, List<SalesReportData> reportDataList) {
+		for (SalesReportData data : reportDataList) {
+			if ("SalesActivity".equalsIgnoreCase(data.getType())) {
+				if (data.isConfidential()) {
+					if (isSupervisor) {
+						filteredReportDataList.add(data);
+					}
+				}else {
+					filteredReportDataList.add(data);
+				}
+			}
+		}
+
+		List<SalesReportData> tempList = new ArrayList<SalesReportData>();
+		for (int i=0; i < reportDataList.size() || i < maxRow; i++) {
+			tempList.add(reportDataList.get(i));
+		}
+		filteredReportDataList = tempList;
+		return filteredReportDataList;
 	}
 
 	public boolean isEffectiveTime(Sales sales) {
